@@ -1,0 +1,123 @@
+model  Library_Management_System
+
+-- C L A S S E S --
+
+class User
+ attributes
+   id : Id
+   name : String
+   balance : Real
+
+  
+ operations
+   borrowBook(b:Book)
+   returnBook(b:Book)
+   newId(n:Integer)
+
+end
+
+class Id
+ attributes
+  number : Integer
+end
+
+class Manager
+   attributes
+     name : String
+   
+   operations
+     buyBook(b:Book)
+
+end
+
+
+ class Book
+   attributes
+     isbn : String
+     name : String
+     -- borrowed  : Boolean 
+  end
+
+  
+  class Library
+    attributes
+      name : String
+
+  end
+
+
+-- A S S O C I A T I O N S --
+
+association BooksInLibrary between
+   Library[1] role library
+   Book[*] role books
+end
+
+association ManagerLibrary between
+   Library[1] role library
+   Manager[1..*] role manager
+end
+
+
+association Borrowing between
+  User[0..1] role borrower
+  Book[*]  role borrowedBook
+
+end
+
+association userIdTable between
+   
+   User[1]
+   Id[1]
+
+end
+
+
+-- C O N S T R A I N T S --
+constraints
+
+context u:User
+   inv mostBorrow10Book: 
+     u.borrowedBook->size()<=10
+
+context b:Book
+   inv onlyBorrowedByOne: 
+     b.borrower->size()<=1
+
+context User::borrowBook(b:Book)
+ pre pr1: self.borrowedBook->size()<10
+ pre NowBorrow: b.borrower->isEmpty()
+ post po1: self.borrowedBook->includes(b)
+ post po2: b.borrower->size()=1
+ post po3: b.borrower->includes(self)
+
+context User::returnBook(b:Book)
+ pre pr1: self.borrowedBook->includes(b)
+ pre pr2: b.borrower->includes(self)
+ post po2:  not self.borrowedBook->includes(b)
+ post po3:  not b.borrower->includes(self)
+
+context Manager::buyBook(b:Book)
+  pre notInLib: not self.library.books->includes(b)
+  post inLib:  self.library.books->includes(b)
+
+context User::newId(n : Integer)
+  pre  GE0:    n >= 0
+  post NewId:    id.oclIsNew()
+  post IdNumber: id.number = n
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+
